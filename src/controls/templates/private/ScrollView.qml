@@ -94,6 +94,7 @@ MouseArea {
     }
     Item {
         id: flickableParent
+        clip: true
         anchors {
             fill: parent
             rightMargin: !Kirigami.Settings.hasTransientTouchInput && flickableItem.ScrollBar.vertical && flickableItem.ScrollBar.vertical.visible ? flickableItem.ScrollBar.vertical.width : 0
@@ -117,9 +118,8 @@ MouseArea {
             interactive: !Kirigami.Settings.hasTransientTouchInput
 
             //NOTE: use this instead of anchors as crashes on some Qt 5.8 checkouts
-            height: parent.height - anchors.topMargin
+            height: parent.height
             anchors {
-                topMargin: parent.flickableItem.headerItem ? parent.flickableItem.headerItem.height : 0
                 right: parent.right
                 top: parent.top
             }
