@@ -898,16 +898,6 @@ PlatformTheme *PlatformTheme::qmlAttachedProperties(QObject *object)
         return PlatformThemePrivate::s_pluginFactory->createPlatformTheme(object);
     } else if (!s_factoryChecked) {
         s_factoryChecked = true;
-
-        // static plugins take preference
-        for (QObject* staticPlugin : QPluginLoader::staticInstances()) {
-            KirigamiPluginFactory *factory = qobject_cast<KirigamiPluginFactory *>(staticPlugin);
-            if (factory) {
-                PlatformThemePrivate::s_pluginFactory = factory;
-                return factory->createPlatformTheme(object);
-            }
-        }
-
 #if QT_CONFIG(library)
         const auto libraryPaths = QCoreApplication::libraryPaths();
         for (const QString &path : libraryPaths) {
