@@ -282,7 +282,7 @@ bool Icon::smooth() const
 
 QSGNode* Icon::updatePaintNode(QSGNode* node, QQuickItem::UpdatePaintNodeData* /*data*/)
 {
-    if (m_source.isNull()) {
+    if (m_source.isNull() || qFuzzyIsNull(width()) || qFuzzyIsNull(height())) {
         delete node;
         return Q_NULLPTR;
     }
@@ -439,6 +439,7 @@ QImage Icon::findIcon(const QSize &size)
     QString iconSource = m_source.toString();
 
     if (iconSource.startsWith(QLatin1String("image://"))) {
+        const auto multiplier = QCoreApplication::instance()->testAttribute(Qt::AA_UseHighDpiPixmaps) ? (window() ? window()->devicePixelRatio() : qGuiApp->devicePixelRatio()) : 1;
         QUrl iconUrl(iconSource);
         QString iconProviderId = iconUrl.host();
         QString iconId = iconUrl.path();
@@ -455,10 +456,10 @@ QImage Icon::findIcon(const QSize &size)
             return img;
         switch(imageProvider->imageType()){
         case QQmlImageProviderBase::Image:
-            img = imageProvider->requestImage(iconId, &actualSize, size);
+            img = imageProvider->requestImage(iconId, &actualSize, size * multiplier);
             break;
         case QQmlImageProviderBase::Pixmap:
-            img = imageProvider->requestPixmap(iconId, &actualSize, size).toImage();
+            img = imageProvider->requestPixmap(iconId, &actualSize, size * multiplier).toImage();
             break;
         case QQmlImageProviderBase::Texture:
         case QQmlImageProviderBase::Invalid:
