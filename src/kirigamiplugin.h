@@ -1,22 +1,9 @@
 /*
- *   Copyright 2009 by Alan Alpert <alan.alpert@nokia.com>
- *   Copyright 2010 by Ménard Alexis <menard@kde.org>
- *   Copyright 2010 by Marco Martin <mart@kde.org>
-
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU Library General Public License as
- *   published by the Free Software Foundation; either version 2, or
- *   (at your option) any later version.
+ *  SPDX-FileCopyrightText: 2009 Alan Alpert <alan.alpert@nokia.com>
+ *  SPDX-FileCopyrightText: 2010 Ménard Alexis <menard@kde.org>
+ *  SPDX-FileCopyrightText: 2010 Marco Martin <mart@kde.org>
  *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU Library General Public License for more details
- *
- *   You should have received a copy of the GNU Library General Public
- *   License along with this program; if not, write to the
- *   Free Software Foundation, Inc.,
- *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *  SPDX-License-Identifier: LGPL-2.0-or-later
  */
 
 #ifndef KIRIGAMIPLUGIN_H
@@ -33,7 +20,9 @@ class KirigamiPlugin : public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface")
 
 public:
+    KirigamiPlugin(QObject *parent = nullptr);
     void registerTypes(const char *uri) override;
+    void initializeEngine(QQmlEngine *engine, const char *uri) override;
 
 #ifdef KIRIGAMI_BUILD_TYPE_STATIC
     static KirigamiPlugin& getInstance()
@@ -49,11 +38,16 @@ public:
     }
 #endif
 
+Q_SIGNALS:
+    void languageChangeEvent();
+
 private:
     QUrl componentUrl(const QString &fileName) const;
     QString resolveFilePath(const QString &path) const
     {
-#ifdef KIRIGAMI_BUILD_TYPE_STATIC
+#if defined(Q_OS_ANDROID) && QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+        return QStringLiteral(":/android_rcc_bundle/qml/org/kde/kirigami.2/") + path;
+#elif defined(KIRIGAMI_BUILD_TYPE_STATIC)
         return QStringLiteral(":/org/kde/kirigami/") + path;
 #else
         return baseUrl().toLocalFile() + QLatin1Char('/') + path;
@@ -61,7 +55,9 @@ private:
     }
     QString resolveFileUrl(const QString &filePath) const
     {
-#ifdef KIRIGAMI_BUILD_TYPE_STATIC
+#if defined(Q_OS_ANDROID) && QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+        return QStringLiteral("qrc:/android_rcc_bundle/qml/org/kde/kirigami.2/") + filePath;
+#elif defined(KIRIGAMI_BUILD_TYPE_STATIC)
         return filePath;
 #else
         return baseUrl().toString() + QLatin1Char('/') + filePath;

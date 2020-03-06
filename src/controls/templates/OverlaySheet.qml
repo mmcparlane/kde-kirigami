@@ -1,21 +1,8 @@
 /*
-*   Copyright (C) 2016 by Marco Martin <mart@kde.org>
-*
-*   This program is free software; you can redistribute it and/or modify
-*   it under the terms of the GNU Library General Public License as
-*   published by the Free Software Foundation; either version 2, or
-*   (at your option) any later version.
-*
-*   This program is distributed in the hope that it will be useful,
-*   but WITHOUT ANY WARRANTY; without even the implied warranty of
-*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*   GNU Library General Public License for more details
-*
-*   You should have received a copy of the GNU Library General Public
-*   License along with this program; if not, write to the
-*   Free Software Foundation, Inc.,
-*   51 Franklin Street, Fifth Floor, Boston, MA  2.010-1301, USA.
-*/
+ *  SPDX-FileCopyrightText: 2016 by Marco Martin <mart@kde.org>
+ *
+ *  SPDX-License-Identifier: LGPL-2.0-or-later
+ */
 
 import QtQuick 2.11
 import QtQuick.Layouts 1.2
@@ -184,10 +171,19 @@ QtObject {
         Theme.colorSet: root.Theme.colorSet
         Theme.inherit: root.Theme.inherit
         //we want to be over any possible OverlayDrawers, including handles
-        parent: root.parent && root.parent.ColumnView.view && (root.parent.ColumnView.view == root.parent || root.parent.ColumnView.view == root.parent.parent) ? root.parent.ColumnView.view.parent : root.parent
+        parent: {
+            if (root.parent && root.parent.ColumnView.view && (root.parent.ColumnView.view == root.parent || root.parent.ColumnView.view == root.parent.parent)) {
+                return root.parent.ColumnView.view.parent;
+            } else if (root.parent && root.parent.overlay) {
+                root.parent.overlay;
+            } else {
+                return root.parent;
+            }
+        }
 
         anchors.fill: parent
-        z: typeof applicationWindow !== "undefined" && root.parent === applicationWindow().overlay ? 0 : 9998
+
+        z: 9998
         visible: false
         drag.filterChildren: true
         hoverEnabled: true
@@ -260,7 +256,7 @@ QtObject {
                 cursorY = focusItem.positionToRectangle(focusItem.cursorPosition).y;
             }
 
-            
+
             var pos = focusItem.mapToItem(flickableContents, 0, cursorY - Units.gridUnit*3);
             //focused item already visible? add some margin for the space of the action buttons
             if (pos.y >= scrollView.flickableItem.contentY && pos.y <= scrollView.flickableItem.contentY + scrollView.flickableItem.height - Units.gridUnit * 8) {
@@ -270,7 +266,7 @@ QtObject {
         }
 
         ParallelAnimation {
-            id: openAnimation 
+            id: openAnimation
             property int margins: Units.gridUnit * 5
             property int topOpenPosition: Math.min(-mainItem.height*0.15, scrollView.flickableItem.contentHeight - mainItem.height + margins)
             property alias from: openAnimationInternal.from
@@ -366,7 +362,7 @@ QtObject {
                     rightMargin: closeIcon.width + Units.smallSpacing
                 }
             }
-            
+
             EdgeShadow {
                 z: -2
                 edge: Qt.TopEdge

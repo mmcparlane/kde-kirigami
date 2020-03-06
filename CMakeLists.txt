@@ -33,7 +33,7 @@ include(FeatureSummary)
 
 find_package(Qt5 ${REQUIRED_QT_VERSION} REQUIRED NO_MODULE COMPONENTS Core Quick Gui Svg QuickControls2)
 if (BUILD_TESTING)
-    find_package(Qt5Test ${REQUIRED_QT_VERSION} CONFIG QUIET)
+    find_package(Qt5QuickTest ${REQUIRED_QT_VERSION} CONFIG QUIET)
 endif()
 add_definitions(-DQT_NO_FOREACH)
 set(CMAKE_AUTOMOC ON)
@@ -44,10 +44,6 @@ if(STATIC_LIBRARY)
     add_definitions(-DKIRIGAMI_BUILD_TYPE_STATIC)
     add_definitions(-DQT_PLUGIN)
     add_definitions(-DQT_STATICPLUGIN=1)
-else(STATIC_LIBRARY)
-    if (BUILD_TESTING)
-        add_subdirectory(autotests)
-    endif()
 endif(STATIC_LIBRARY)
 
 ################# set KDE specific information #################
@@ -128,9 +124,12 @@ if (BUILD_EXAMPLES AND NOT STATIC_LIBRARY)
     add_subdirectory(examples)
 endif()
 
+if (BUILD_TESTING AND NOT STATIC_LIBRARY)
+    add_subdirectory(autotests)
+endif()
+
 if (IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/po")
     ecm_install_po_files_as_qm(po)
 endif()
 
 feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
-

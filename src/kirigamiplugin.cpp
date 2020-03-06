@@ -1,22 +1,9 @@
 /*
- *   Copyright 2009 by Alan Alpert <alan.alpert@nokia.com>
- *   Copyright 2010 by Ménard Alexis <menard@kde.org>
- *   Copyright 2010 by Marco Martin <mart@kde.org>
-
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU Library General Public License as
- *   published by the Free Software Foundation; either version 2, or
- *   (at your option) any later version.
+ *  SPDX-FileCopyrightText: 2009 Alan Alpert <alan.alpert@nokia.com>
+ *  SPDX-FileCopyrightText: 2010 Ménard Alexis <menard@kde.org>
+ *  SPDX-FileCopyrightText: 2010 Marco Martin <mart@kde.org>
  *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU Library General Public License for more details
- *
- *   You should have received a copy of the GNU Library General Public
- *   License along with this program; if not, write to the
- *   Free Software Foundation, Inc.,
- *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *  SPDX-License-Identifier: LGPL-2.0-or-later
  */
 
 #include "kirigamiplugin.h"
@@ -57,6 +44,33 @@ class CopyHelperPrivate : public QObject
         }
 };
 
+// we can't do this in the plugin object directly, as that can live in a different thread
+// and event filters are only allowed in the same thread as the filtered object
+class LanguageChangeEventFilter : public QObject
+{
+    Q_OBJECT
+public:
+    bool eventFilter(QObject *receiver, QEvent *event) override
+    {
+        if (event->type() == QEvent::LanguageChange && receiver == QCoreApplication::instance()) {
+            emit languageChangeEvent();
+        }
+        return QObject::eventFilter(receiver, event);
+    }
+
+Q_SIGNALS:
+    void languageChangeEvent();
+};
+
+KirigamiPlugin::KirigamiPlugin(QObject *parent)
+    : QQmlExtensionPlugin(parent)
+{
+    auto filter = new LanguageChangeEventFilter;
+    filter->moveToThread(QCoreApplication::instance()->thread());
+    QCoreApplication::instance()->installEventFilter(filter);
+    connect(filter, &LanguageChangeEventFilter::languageChangeEvent, this, &KirigamiPlugin::languageChangeEvent);
+}
+
 QUrl KirigamiPlugin::componentUrl(const QString &fileName) const
 {
     for (const QString &style : qAsConst(m_stylesFallbackChain)) {
@@ -79,6 +93,10 @@ QUrl KirigamiPlugin::componentUrl(const QString &fileName) const
 
 void KirigamiPlugin::registerTypes(const char *uri)
 {
+#if defined(Q_OS_ANDROID) && QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+    QResource::registerResource(QStringLiteral("assets:/android_rcc_bundle.rcc"));
+#endif
+
     Q_ASSERT(QLatin1String(uri) == QLatin1String("org.kde.kirigami"));
     const QString style = QQuickStyle::name();
 
@@ -218,6 +236,12 @@ void KirigamiPlugin::registerTypes(const char *uri)
     qmlRegisterType(componentUrl(QStringLiteral("SwipeListItem2.qml")), uri, 2, 11, "SwipeListItem2");
 
     qmlProtectModule(uri, 2);
+}
+
+void KirigamiPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
+{
+    Q_UNUSED(uri);
+    connect(this, &KirigamiPlugin::languageChangeEvent, engine, &QQmlEngine::retranslate);
 }
 
 #include "kirigamiplugin.moc"

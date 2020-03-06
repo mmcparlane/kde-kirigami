@@ -1,20 +1,7 @@
 /*
- *   Copyright 2016 Marco Martin <mart@kde.org>
+ *  SPDX-FileCopyrightText: 2016 Marco Martin <mart@kde.org>
  *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU Library General Public License as
- *   published by the Free Software Foundation; either version 2, or
- *   (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU Library General Public License for more details
- *
- *   You should have received a copy of the GNU Library General Public
- *   License along with this program; if not, write to the
- *   Free Software Foundation, Inc.,
- *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *  SPDX-License-Identifier: LGPL-2.0-or-later
  */
 
 import QtQuick 2.7
@@ -27,9 +14,20 @@ Controls.ToolButton {
 
     signal menuAboutToShow
 
-    implicitWidth: menuArrow.visible || (showText && ( kirigamiAction ? kirigamiAction.text.length > 0 : text.length > 0))
-    ? Math.max(layout.implicitWidth + Units.largeSpacing*2, background.implicitWidth)
-    : implicitHeight
+    implicitWidth: {
+        if (!menuArrow.visible) {
+            if (!showText || display == Controls.Button.IconOnly) {
+                return implicitHeight
+            }
+
+            var textLength = kirigamiAction ? kirigamiAction.text.length : text.length
+            if (textLength == 0) {
+                return implicitHeight
+            }
+        }
+
+        return Math.max(layout.implicitWidth + Units.largeSpacing * 2, background.implicitWidth)
+    }
 
     Theme.colorSet: Theme.Button
     Theme.inherit: kirigamiAction && kirigamiAction.icon.color.a === 0
@@ -53,7 +51,7 @@ Controls.ToolButton {
     checked: (kirigamiAction && kirigamiAction.checked)
     enabled: kirigamiAction && kirigamiAction.enabled
     opacity: enabled ? 1 : 0.4
-    visible: kirigamiAction && kirigamiAction.visible
+    visible: (kirigamiAction && kirigamiAction.hasOwnProperty("visible")) ? kirigamiAction.visible : true
     onClicked: {
         if (kirigamiAction) {
             kirigamiAction.trigger();
@@ -136,7 +134,7 @@ Controls.ToolButton {
     }
     Controls.ToolTip {
         visible: control.hovered && text.length > 0 && !menu.visible && !control.pressed
-        text: kirigamiAction ? (kirigamiAction.tooltip.length ? kirigamiAction.tooltip : kirigamiAction.text) : ""
+        text: kirigamiAction ? (kirigamiAction.tooltip && kirigamiAction.tooltip.length ? kirigamiAction.tooltip : kirigamiAction.text) : ""
         delay: Units.toolTipDelay
         timeout: 5000
         y: control.height

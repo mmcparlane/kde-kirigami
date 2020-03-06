@@ -1,21 +1,8 @@
 /*
- *   Copyright 2018 Marco Martin <mart@kde.org>
- *   Copyright 2019 Arjen Hiemstra <ahiemstra@heimr.nl>
+ *  SPDX-FileCopyrightText: 2018 Marco Martin <mart@kde.org>
+ *  SPDX-FileCopyrightText: 2019 Arjen Hiemstra <ahiemstra@heimr.nl>
  *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU Library General Public License as
- *   published by the Free Software Foundation; either version 2, or
- *   (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU Library General Public License for more details
- *
- *   You should have received a copy of the GNU Library General Public
- *   License along with this program; if not, write to the
- *   Free Software Foundation, Inc.,
- *   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *  SPDX-License-Identifier: LGPL-2.0-or-later
  */
 
 import QtQuick 2.7
@@ -118,8 +105,18 @@ Item {
                     return toolButtonDelegate
                 }
 
-                visible: (modelData.visible === undefined || modelData.visible)
-                    && (modelData.displayHint !== undefined && !modelData.displayHintSet(Kirigami.Action.DisplayHint.AlwaysHide))
+                visible: {
+                    if (modelData.hasOwnProperty("visible") && !modelData.visible) {
+                        return false
+                    }
+
+                    if (modelData.hasOwnProperty("displayHint") &&
+                        modelData.displayHintSet(Kirigami.Action.DisplayHint.AlwaysHide)) {
+                        return false
+                    }
+
+                    return true
+                }
 
                 property bool actionVisible: visible && (x + width < details.fullLayoutWidth)
 
@@ -163,8 +160,16 @@ Item {
             PrivateActionToolButton {
                 flat: details.flat && !modelData.icon.color.a
                 display: Controls.Button.IconOnly
-                visible: (modelData.visible === undefined || modelData.visible)
-                         && (modelData.displayHint !== undefined && modelData.displayHintSet(Kirigami.Action.DisplayHint.KeepVisible))
+                visible: {
+                    if (modelData.hasOwnProperty("visible") && !modelData.visible) {
+                        return false
+                    }
+                    if (modelData.hasOwnProperty("displayHint")
+                        && modelData.displayHintSet(Kirigami.Action.DisplayHint.KeepVisible)) {
+                        return true
+                    }
+                    return false
+                }
                 kirigamiAction: modelData
                 property bool actionVisible: visible && (iconOnlyPlaceholderRepeater.count === 1 || (x + width < details.iconLayoutWidth))
             }
