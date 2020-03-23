@@ -149,7 +149,8 @@ Controls.Popup {
 
                 Kirigami.Theme.colorSet: root.Kirigami.Theme.colorSet
                 width: mainLayout.width
-
+                //FIXME: why this is not automatic?
+                implicitHeight: Math.max(label.implicitHeight, actionButton.implicitHeight)
                 HoverHandler {
                     id: hover
                 }
@@ -165,6 +166,10 @@ Controls.Popup {
 
                 Controls.Label {
                     id: label
+                    Layout.maximumWidth: Math.min(root.parent.width - Kirigami.Units.largeSpacing * 4, implicitWidth)
+                    elide: Text.ElideRight
+                    wrapMode: Text.WordWrap
+                    maximumLineCount: 4
                 }
 
                 Controls.Button {
