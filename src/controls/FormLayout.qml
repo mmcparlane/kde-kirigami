@@ -109,7 +109,6 @@ Item {
                 }
                 PropertyChanges {
                     target: lay
-                    implicitWidth: undefined
                     width: undefined
                 }
             },
@@ -135,6 +134,7 @@ Item {
         width: Math.min(implicitWidth, parent.width)
         Timer {
             id: hintCompression
+            interval: 0
             onTriggered: {
                 if (root.wideMode) {
                     lay.wideImplicitWidth = lay.implicitWidth;
