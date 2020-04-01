@@ -156,7 +156,8 @@ QQuickItem *PagePool::loadPageWithProperties(
     }
 }
 
-
+// As soon as we can depend on Qt 5.14, usage of this incubator should be
+// replaced with a call to QQmlComponent::createWithInitialProperties
 class PropertyInitializingIncubator : public QQmlIncubator
 {
     const QVariantMap &_props;

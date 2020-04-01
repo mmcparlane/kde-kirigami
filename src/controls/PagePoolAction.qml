@@ -50,11 +50,11 @@ Kirigami.Action {
     property Controls.Page basePage
 
     /**
-      * properties: JavaScript Object
+      * initialProperties: JavaScript Object
       * The properties object specifies a map of initial property values for the created page
       * when it is pushed onto the Kirigami.PagePool.
       */
-    property var properties
+    property var initialProperties
 
     checked: pagePool && pagePool.resolvedUrl(page) == pagePool.lastLoadedUrl
     onTriggered: {
@@ -76,10 +76,7 @@ Kirigami.Action {
             } else {
                 pageStack.clear();
             }
-
-            pageStack.push(properties ?
-                               pagePool.loadPageWithProperties(page, properties) :
-                               pagePool.loadPage(page));
+            pageStack.push(pagePool.loadPage(page));
         } else {
             pagePool.loadPage(page, function(item) {
                 if (basePage) {
