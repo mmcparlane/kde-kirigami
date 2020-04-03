@@ -51,7 +51,7 @@ Kirigami.Action {
 
     /**
       * initialProperties: JavaScript Object
-      * The properties object specifies a map of initial property values for the created page
+      * The initialProperties object specifies a map of initial property values for the created page
       * when it is pushed onto the Kirigami.PagePool.
       */
     property var initialProperties
@@ -76,16 +76,27 @@ Kirigami.Action {
             } else {
                 pageStack.clear();
             }
-            pageStack.push(pagePool.loadPage(page));
+
+            pageStack.push(initialProperties ?
+                               pagePool.loadPageWithProperties(page, initialProperties) :
+                               pagePool.loadPage(page));
+                               
         } else {
-            pagePool.loadPage(page, function(item) {
+            var callback = function(item) {
                 if (basePage) {
                     pageStack.pop(basePage);
                 } else {
                     pageStack.clear();
                 }
                 pageStack.push(item);
-            });
+            };
+
+            if (initialProperties) {
+                pagePool.loadPage(page, initialProperties, callback);
+
+            } else {
+                pagePool.loadPage(page, callback);
+            }
         }
     }
 }
