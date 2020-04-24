@@ -7,7 +7,7 @@
 import QtQuick 2.6
 import QtQuick.Layouts 1.2
 import QtQuick.Controls 2.0 as Controls
-import org.kde.kirigami 2.5 as Kirigami
+import org.kde.kirigami 2.12 as Kirigami
 import "private"
 
 /**
@@ -67,12 +67,22 @@ Kirigami.AbstractCard {
 
     header: BannerImage {
         id: bannerImage
-        anchors.leftMargin: -root.leftPadding
-        anchors.topMargin: -root.topPadding
-        anchors.rightMargin: root.headerOrientation == Qt.Vertical ? -root.rightPadding : 0
-        anchors.bottomMargin: root.headerOrientation == Qt.Horizontal ? -root.bottomPadding : 0
+        anchors.leftMargin: -root.leftPadding + root.background.border.width
+        anchors.topMargin: -root.topPadding + root.background.border.width
+        anchors.rightMargin: root.headerOrientation == Qt.Vertical ? -root.rightPadding + root.background.border.width : 0
+        anchors.bottomMargin: root.headerOrientation == Qt.Horizontal ? -root.bottomPadding + root.background.border.width : 0
         //height: Layout.preferredHeight
         implicitWidth: root.headerOrientation == Qt.Horizontal ? sourceSize.width : Layout.preferredWidth
+        Layout.preferredHeight: (source != "" ? width / (sourceSize.width / sourceSize.height) : Layout.minimumHeight) + anchors.topMargin + anchors.bottomMargin
+
+        readonly property real widthWithBorder: width + root.background.border.width * 2
+        readonly property real heightWithBorder: height + root.background.border.width * 2
+        readonly property real radiusFromBackground: root.background.radius - root.background.border.width
+
+        corners.topLeftRadius: radiusFromBackground
+        corners.topRightRadius: (root.headerOrientation == Qt.Horizontal && widthWithBorder < root.width) ? 0 : radiusFromBackground
+        corners.bottomLeftRadius: (root.headerOrientation != Qt.Horizontal && heightWithBorder < root.height) ? 0 : radiusFromBackground
+        corners.bottomRightRadius: heightWithBorder < root.height ? 0 : radiusFromBackground
     }
 
     onHeaderChanged: {

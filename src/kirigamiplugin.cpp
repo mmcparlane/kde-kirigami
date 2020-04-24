@@ -20,6 +20,7 @@
 #include "shadowedrectangle.h"
 #include "shadowedtexture.h"
 #include "colorutils.h"
+#include "pagerouter.h"
 
 #include <QQmlEngine>
 #include <QQmlContext>
@@ -242,12 +243,16 @@ void KirigamiPlugin::registerTypes(const char *uri)
     qmlRegisterType<ShadowedRectangle>(uri, 2, 12, "ShadowedRectangle");
     qmlRegisterType<ShadowedTexture>(uri, 2, 12, "ShadowedTexture");
     qmlRegisterType(componentUrl(QStringLiteral("ShadowedImage.qml")), uri, 2, 12, "ShadowedImage");
+    qmlRegisterType(componentUrl(QStringLiteral("PlaceholderMessage.qml")), uri, 2, 12, "PlaceholderMessage");
 
     qmlRegisterUncreatableType<BorderGroup>(uri, 2, 12, "BorderGroup", QStringLiteral("Used as grouped property"));
     qmlRegisterUncreatableType<ShadowGroup>(uri, 2, 12, "ShadowGroup", QStringLiteral("Used as grouped property"));
     qmlRegisterSingletonType<ColorUtils>(uri, 2, 12, "ColorUtils", [] (QQmlEngine*, QJSEngine*) -> QObject* { return new ColorUtils; });
 
     qmlRegisterUncreatableType<CornersGroup>(uri, 2, 12, "CornersGroup", QStringLiteral("Used as grouped property"));
+    qmlRegisterType<PageRouter>(uri, 2, 12, "PageRouter");
+    qmlRegisterType<PageRoute>(uri, 2, 12, "PageRoute");
+    qmlRegisterUncreatableType<PageRouterAttached>(uri, 2, 12, "PageRouterAttached", QStringLiteral("PageRouterAttached cannot be created"));
 
     qmlProtectModule(uri, 2);
 }

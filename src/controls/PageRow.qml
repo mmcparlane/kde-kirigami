@@ -17,7 +17,7 @@ import "templates" as KT
  * PageRow implements a row-based navigation model, which can be used
  * with a set of interlinked information pages. Items are pushed in the
  * back of the row and the view scrolls until that row is visualized.
- * A PageRowcan show a single page or a multiple set of columns, depending
+ * A PageRow can show a single page or a multiple set of columns, depending
  * on the window width: on a phone a single column should be fullscreen,
  * while on a tablet or a desktop more than one column should be visible.
  * @inherit QtQuick.Templates.Control
@@ -55,6 +55,17 @@ T.Control {
      * The main ColumnView of this Row
      */
     contentItem: columnView
+
+    /**
+     * columnView: Kirigami::ColumnView
+     *
+     * The ColumnView that this PageRow owns.
+     * Generally, you shouldn't need to change
+     * the value of this.
+     *
+     * @since 2.12
+     */
+    property alias columnView: columnView
 
     /**
      * items: list<Item>

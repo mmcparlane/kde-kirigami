@@ -208,15 +208,14 @@ QtObject {
 
         anchors.fill: parent
 
-        z: 9998
         visible: false
         drag.filterChildren: true
         hoverEnabled: true
         clip: true
 
         onClicked: {
-            var pos = mapToItem(flickableContents, mouse.x, mouse.y);
-            if (!flickableContents.contains(pos)) {
+            var pos = mapToItem(scrollView.contentItem, mouse.x, mouse.y);
+            if (!scrollView.contentItem.contains(pos)) {
                 root.close();
             }
         }
@@ -270,7 +269,7 @@ QtObject {
                 target: outerFlickable
                 properties: "contentY"
                 from: -outerFlickable.height
-                to: Math.max(0, outerFlickable.height - outerFlickable.contentHeight + headerItem.height + footerItem.height)
+                to: Math.max(0, outerFlickable.height - outerFlickable.contentHeight + headerItem.height + footerItem.height) + outerFlickable.topMargin/2 - contentLayout.height/2
                 duration: Units.longDuration
                 easing.type: Easing.OutQuad
             }
@@ -289,7 +288,7 @@ QtObject {
             properties: "contentY"
             from: outerFlickable.contentY
             to: outerFlickable.visibleArea.yPosition < (1 - outerFlickable.visibleArea.heightRatio)/2 || scrollView.flickableItem.contentHeight < outerFlickable.height
-                ? Math.max(0, outerFlickable.height - outerFlickable.contentHeight + headerItem.height + footerItem.height)
+                ? Math.max(0, outerFlickable.height - outerFlickable.contentHeight + headerItem.height + footerItem.height) + outerFlickable.topMargin/2 - contentLayout.height/2
                 : outerFlickable.contentHeight - outerFlickable.height + outerFlickable.topEmptyArea + headerItem.height + footerItem.height
             duration: Units.longDuration
             easing.type: Easing.OutQuad
@@ -323,7 +322,7 @@ QtObject {
         Rectangle {
             anchors.fill: parent
             color: "black"
-            opacity: 0.6 * Math.min(
+            opacity: 0.3 * Math.min(
                 (Math.min(outerFlickable.contentY + outerFlickable.height, outerFlickable.height) / outerFlickable.height),
                 (2 + (outerFlickable.contentHeight - outerFlickable.contentY - outerFlickable.topMargin - outerFlickable.bottomMargin)/outerFlickable.height))
         }
@@ -508,10 +507,12 @@ QtObject {
                             right: parent.right
                             left: parent.left
                             top: parent.bottom
+                            leftMargin: 1
+                            rightMargin: 1
                         }
                     }
                 }
-        
+
                 ScrollView {
                     id: scrollView
 
@@ -520,7 +521,9 @@ QtObject {
                     Layout.fillHeight: true
 
                     implicitHeight: flickableItem.contentHeight
+                    Layout.maximumHeight: flickableItem.contentHeight
                 }
+
                 Connections {
                     target: scrollView.flickableItem
                     property real oldContentY: 0
@@ -546,6 +549,7 @@ QtObject {
                     }
                 }
                 Item {
+                    visible: footerItem.visible
                     implicitHeight: footerItem.height
                 }
             }

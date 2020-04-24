@@ -23,9 +23,11 @@ It is a Tier-1 KDE Framework starting with KDE Frameworks 5.37.
 - \link org::kde::kirigami::Page Page  \endlink
 - \link org::kde::kirigami::ScrollablePage ScrollablePage  \endlink
 - \link org::kde::kirigami::OverlaySheet  OverlaySheet \endlink
+- \link PageRouter  PageRouter \endlink
+- \link PageRoute  PageRoute \endlink
 - \link org::kde::kirigami::Theme Theme  \endlink
 - \link org::kde::kirigami::Units  Units \endlink
-- \link org::kde::kirigami::Icon Icon  \endlink
+- \link Icon Icon  \endlink
 - \link org::kde::kirigami::AbstractApplicationHeader AbstractApplicationHeader  \endlink
 - \link org::kde::kirigami::AbstractApplicationWindow AbstractApplicationWindow  \endlink
 - \link org::kde::kirigami::AbstractListItem AbstractListItem  \endlink
@@ -35,6 +37,7 @@ It is a Tier-1 KDE Framework starting with KDE Frameworks 5.37.
 - \link org::kde::kirigami::SwipeListItem  SwipeListItem \endlink
 - \link org::kde::kirigami::Heading Heading  \endlink
 - \link org::kde::kirigami::Label Label  \endlink
+- \link org::kde::kirigami::PlaceholderMessage PlaceholderMessage  \endlink
 
 
 \section example Minimal Example
@@ -194,6 +197,6 @@ Marco Martin \<notmart@gmail.com\>
 
 
 // DOXYGEN_SET_RECURSIVE = YES
-// DOXYGEN_SET_EXCLUDE_PATTERNS += *_p.h */private/* */examples/*
+// DOXYGEN_SET_EXCLUDE_PATTERNS += *_p.h */private/* */examples/* */doc/*
 // DOXYGEN_SET_PROJECT_NAME = Kirigami
 // vim:ts=4:sw=4:expandtab:filetype=doxygen
