@@ -58,6 +58,8 @@ Kirigami.Action {
     property var initialProperties
 
     /** useLayers: bool
+      * @since 5.70
+      * @since org.kde.kirigami 2.12
       * When true the PagePoolAction will use the layers property of the pageStack.
       * This is intended for use with PageRow layers to allow PagePoolActions to
       * push context-specific pages onto the layers stack. 
@@ -158,8 +160,16 @@ Kirigami.Action {
         }
     }
 
-    property QtObject _private: QtObject {
+    QtObject {
         id: _private
+
+        function setChecked(checked) {
+            root.checked = checked
+        }
+
+        function clearLayers() {
+            pageStack.layers.clear()
+        }
         
         property list<Connections> connections: [
             Connections {
@@ -168,24 +178,30 @@ Kirigami.Action {
                 onCurrentItemChanged: {
                     if (root.useLayers) {
                         if (root.layerContainsPage()) {
-                            pageStack.layers.clear()
+                            _private.clearLayers()
                         }
                         if (root.checkable)
-                            root.checked = false;
+                            _private.setChecked(false);
 
                     } else {
                         if (root.checkable)
-                            root.checked = root.stackContainsPage();
+                            _private.setChecked(root.stackContainsPage());
                     }
                 }
             },
             Connections {
-                enabled: root.useLayers && pageStack.hasOwnProperty("layers")
+                enabled: pageStack.hasOwnProperty("layers")
                 target: pageStack.layers
 
                 onCurrentItemChanged: {
-                    if (root.checkable)
-                        root.checked = root.layerContainsPage();
+                    if (root.useLayers && root.checkable) {
+                        _private.setChecked(root.layerContainsPage());
+
+                    } else {
+                        if (pageStack.layers.depth == 1 && root.stackContainsPage()) {
+                            _private.setChecked(true)
+                        }
+                    }
                 }
             }
         ]

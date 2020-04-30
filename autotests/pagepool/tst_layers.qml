@@ -5,7 +5,7 @@
  */
 
 import QtQuick 2.7
-import QtQuick.Controls 2.0
+import QtQuick.Controls 2.7
 import QtQuick.Window 2.1
 import org.kde.kirigami 2.11 as Kirigami
 import QtTest 1.0
@@ -15,6 +15,7 @@ TestCase {
     width: 400
     height: 400
     name: "PagePoolWithLayers"
+    when: windowShown
 
     function initTestCase() {
         mainWindow.show()
@@ -23,8 +24,6 @@ TestCase {
     function cleanupTestCase() {
         mainWindow.close()
     }
-
-    function applicationWindow() { return mainWindow; }
 
     Kirigami.ApplicationWindow {
         id: mainWindow
@@ -60,51 +59,56 @@ TestCase {
         }
     }
 
-    Kirigami.PagePoolAction {
-        id: stackPageA
-        objectName: "stackPageA"
-        pagePool: pool
-        pageStack: mainWindow.pageStack
-        page: "TestPage.qml?page=A"
-        initialProperties: { return {title: "A", objectName: "Page A" } }
-    }
+    ActionGroup {
+        id: group
+        exclusive: false
 
-    Kirigami.PagePoolAction {
-        id: stackPageB
-        objectName: "stackPageB"
-        pagePool: pool
-        pageStack: mainWindow.pageStack
-        page: "TestPage.qml?page=B"
-        initialProperties: { return {title: "B", objectName: "Page B" } }
-    }
+        Kirigami.PagePoolAction {
+            id: stackPageA
+            objectName: "stackPageA"
+            pagePool: pool
+            pageStack: mainWindow.pageStack
+            page: "TestPage.qml?page=A"
+            initialProperties: { return {title: "A", objectName: "Page A" } }
+        }
 
-    Kirigami.PagePoolAction {
-        id: layerPageC
-        objectName: "layerPageC"
-        pagePool: pool
-        pageStack: mainWindow.pageStack
-        useLayers: true
-        page: "TestPage.qml?page=C"
-        initialProperties: { return {title: "C", objectName: "Page C" } }
-    }
+        Kirigami.PagePoolAction {
+            id: stackPageB
+            objectName: "stackPageB"
+            pagePool: pool
+            pageStack: mainWindow.pageStack
+            page: "TestPage.qml?page=B"
+            initialProperties: { return {title: "B", objectName: "Page B" } }
+        }
 
-    Kirigami.PagePoolAction {
-        id: layerPageD
-        objectName: "layerPageD"
-        pagePool: pool
-        pageStack: mainWindow.pageStack
-        useLayers: true
-        page: "TestPage.qml?page=D"
-        initialProperties: { return {title: "D", objectName: "Page D" } }
-    }
+        Kirigami.PagePoolAction {
+            id: layerPageC
+            objectName: "layerPageC"
+            pagePool: pool
+            pageStack: mainWindow.pageStack
+            useLayers: true
+            page: "TestPage.qml?page=C"
+            initialProperties: { return {title: "C", objectName: "Page C" } }
+        }
 
-    Kirigami.PagePoolAction {
-        id: stackPageE
-        objectName: "stackPageE"
-        pagePool: pool
-        pageStack: mainWindow.pageStack
-        page: "TestPage.qml?page=E"
-        initialProperties: { return {title: "E", objectName: "Page E" } }
+        Kirigami.PagePoolAction {
+            id: layerPageD
+            objectName: "layerPageD"
+            pagePool: pool
+            pageStack: mainWindow.pageStack
+            useLayers: true
+            page: "TestPage.qml?page=D"
+            initialProperties: { return {title: "D", objectName: "Page D" } }
+        }
+
+        Kirigami.PagePoolAction {
+            id: stackPageE
+            objectName: "stackPageE"
+            pagePool: pool
+            pageStack: mainWindow.pageStack
+            page: "TestPage.qml?page=E"
+            initialProperties: { return {title: "E", objectName: "Page E" } }
+        }
     }
 
     function tapBack () {
@@ -283,5 +287,21 @@ TestCase {
         tapBack()
         layerPageC.trigger()
         compare(layers.currentItem, layerPageC.pageItem())
+    }
+
+    function test_exclusive_group() {
+        var stack = mainWindow.pageStack
+        var layers = stack.layers
+
+        group.exclusive = true
+        stackPageA.trigger()
+        compare(stackPageA.checked, true)
+        compare(layerPageC.checked, false)
+        layerPageC.trigger()
+        compare(stackPageA.checked, false)
+        compare(layerPageC.checked, true)
+        tapBack()
+        compare(stackPageA.checked, true)
+        compare(layerPageC.checked, false)
     }
 }
