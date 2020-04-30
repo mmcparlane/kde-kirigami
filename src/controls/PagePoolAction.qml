@@ -160,7 +160,8 @@ Kirigami.Action {
         }
     }
 
-    QtObject {
+    // Exposing this as a property is required as Action does not have a default property
+    property QtObject _private: QtObject {
         id: _private
 
         function setChecked(checked) {
