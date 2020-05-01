@@ -103,7 +103,7 @@ Kirigami.Action {
         }
 
         // User intends to "go back" to this layer.
-        if (layerContainsPage()) {
+        if (layerContainsPage() && pageItem() !== pageStack.layers.currentItem) {
             pageStack.layers.replace(pageItem(), pageItem()) // force pop above
             return
         }
@@ -113,8 +113,6 @@ Kirigami.Action {
             if (pageStack.hasOwnProperty("layers")) {
                 pageStack.layers.clear()
             }
-            // TODO: navigate to page if it is already on the stack
-            // instead of clearing it below.
         }
 
         let pageStack_ = useLayers ? pageStack.layers : pageStack
