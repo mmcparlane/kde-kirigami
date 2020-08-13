@@ -7,7 +7,7 @@
 import QtQuick 2.7
 import QtQuick.Layouts 1.2
 import QtQuick.Controls 2.4 as Controls
-import org.kde.kirigami 2.5 as Kirigami
+import org.kde.kirigami 2.14 as Kirigami
 import "private"
 
 /**
@@ -18,7 +18,7 @@ import "private"
  * @inherits Item
  * @since 2.5
  */
-Item {
+Controls.Control {
     id: root
     /**
     * actions: list<Action>
@@ -26,15 +26,17 @@ Item {
     * they will be put in the footer as a list of ToolButtons plus an optional
     * overflow menu, when not all of them will fit in the available Card width.
     */
-    property list<QtObject> actions
+    property alias actions: layout.actions
 
     /**
     * actions: hiddenActions<Action>
     * This list of actions is for those you always want in the menu, even if there
     * is enough space.
     * @since 2.6
+    * @deprecated since 2.14, use the AlwaysHide hint on actions instead.
     */
     property list<QtObject> hiddenActions
+    onHiddenActionsChanged: print("ActionToolBar::hiddenActions is deprecated, use the AlwaysHide hint on your actions instead")
 
     /**
      * flat: bool
@@ -53,7 +55,7 @@ Item {
      */
     property int display: Controls.Button.TextBesideIcon
 
-    property int alignment: Qt.AlignLeft
+    property alias alignment: layout.alignment
 
     /**
      * position enum
@@ -74,7 +76,7 @@ Item {
      *
      * The value of this property is derived from the ToolBar's actions and their properties.
      */
-    readonly property alias maximumContentWidth: details.maximumWidth
+    readonly property alias maximumContentWidth: layout.implicitWidth
 
     /**
      * The name of the icon to use for the overflow menu button.
@@ -84,131 +86,98 @@ Item {
      */
     property string overflowIconName: "overflow-menu"
 
-    implicitHeight: actionsLayout.implicitHeight
-    implicitWidth: actionsLayout.implicitWidth
-    Layout.minimumWidth: moreButton.visible ? moreButton.implicitWidth : 0
+    property alias visibleWidth: layout.visibleWidth
 
-    RowLayout {
-        id: actionsLayout
-        anchors.fill: parent
-        spacing: 0
+    implicitHeight: layout.implicitHeight
+    implicitWidth: layout.implicitWidth
 
-        Item {
-            Layout.fillWidth: root.alignment == Qt.AlignRight || root.alignment == Qt.AlignHCenter || root.alignment == Qt.AlignCenter;
-            Layout.fillHeight: true
+    Layout.minimumWidth: layout.minimumWidth
+    Layout.preferredWidth: 0
+    Layout.fillWidth: true
+
+    leftPadding: 0
+    rightPadding: 0
+    topPadding: 0
+    bottomPadding: 0
+
+    contentItem: Kirigami.ToolBarLayout {
+        id: layout
+        spacing: Kirigami.Units.smallSpacing
+        layoutDirection: root.LayoutMirroring.enabled ? Qt.RightToLeft : Qt.LeftToRight
+
+        fullDelegate: PrivateActionToolButton {
+            flat: root.flat && !action.icon.color.a
+            display: root.display
+            action: Kirigami.ToolBarLayout.action
         }
 
-        Repeater {
-            model: root.actions
+        iconDelegate: PrivateActionToolButton {
+            flat: root.flat && !action.icon.color.a
+            display: Controls.Button.IconOnly
+            action: Kirigami.ToolBarLayout.action
 
-            delegate: Loader {
-                id: delegate
+            showMenuArrow: false
 
-                Layout.alignment: Qt.AlignVCenter
-                // Use leftMargin instead of spacing on the layout to prevent spacer items
-                // from creating useless spacing, only for items that are actually next to
-                // other items.
-                Layout.leftMargin: index > 0 ? Kirigami.Units.smallSpacing : 0
-                Layout.fillWidth: item ? item.Layout.fillWidth : false
-                Layout.minimumWidth: item ? item.Layout.minimumWidth : implicitWidth
-                Layout.preferredWidth: item ? item.Layout.preferredWidth : implicitWidth
-                Layout.maximumWidth: item ? item.Layout.maximumWidth : -1
-
-                property var kirigamiAction: modelData
-
-                sourceComponent: {
-                    if (modelData.displayComponent && !modelData.displayHintSet(Action.DisplayHint.IconOnly)) {
-                        return modelData.displayComponent
-                    }
-                    return toolButtonDelegate
+            menuActions: {
+                if (action.displayComponent) {
+                    return [action]
                 }
 
-                visible: details.visibleActions.indexOf(modelData) != -1
-                         && (modelData.visible === undefined || modelData.visible)
-
-                onLoaded: {
-                    if (sourceComponent == toolButtonDelegate) {
-                        item.kirigamiAction = modelData
-                    }
-                }
-            }
-        }
-
-        Item {
-            Layout.fillWidth: root.alignment == Qt.AlignLeft || root.alignment == Qt.AlignHCenter || root.alignment == Qt.AlignCenter;
-            Layout.fillHeight: true
-        }
-
-        PrivateActionToolButton {
-            id: moreButton
-
-            Layout.alignment: Qt.AlignRight
-            visible: {
-                // Only show the overflow button when we actually have visible actions in the menu,
-                // otherwise we end up showing an overflow button that shows nothing.
-                var visibleCount = Array.prototype.reduce.call(kirigamiAction.children, function (total, current) {
-                    return (details.visibleActions.indexOf(current) == -1 && (current.visible === undefined || current.visible)) ? total + 1 : total
-                }, 0);
-                return visibleCount > 0
-            }
-
-            kirigamiAction: Kirigami.Action {
-                icon.name: root.overflowIconName
-                displayHint: Kirigami.Action.DisplayHint.IconOnly | Kirigami.Action.DisplayHint.HideChildIndicator
-                children: Array.prototype.map.call(root.actions, function (i) { return i }).concat(Array.prototype.map.call(hiddenActions, function (i) { return i }))
-            }
-
-            menu.submenuComponent: ActionsMenu {
-                Binding {
-                    target: parentItem
-                    property: "visible"
-                    value: details.visibleActions.indexOf(parentAction) == -1 &&
-                                (parentAction.visible === undefined || parentAction.visible)
-                }
-            }
-
-            menu.itemDelegate: ActionMenuItem {
-                visible: details.visibleActions.indexOf(action) == -1 &&
-                                    (action.visible === undefined || action.visible)
-            }
-
-            menu.loaderDelegate: Loader {
-                property var kirigamiAction
-                height: visible ? implicitHeight : 0
-                visible: details.visibleActions.indexOf(kirigamiAction) == -1 &&
-                                    (kirigamiAction.visible === undefined || kirigamiAction.visible)
-            }
-        }
-    }
-
-    ActionToolBarLayoutDetails {
-        id: details
-        anchors.fill: parent
-        actions: root.actions
-        rightPadding: moreButton.width + Kirigami.Units.smallSpacing
-        flat: root.flat
-        display: root.display
-    }
-
-    Component {
-        id: toolButtonDelegate
-
-        PrivateActionToolButton {
-            id: button
-            flat: root.flat && !kirigamiAction.icon.color.a
-            display: details.iconOnlyActions.indexOf(kirigamiAction) != -1 ? Controls.Button.IconOnly : root.display
-
-            menu.actions: {
-                if (kirigamiAction.displayComponent && kirigamiAction.displayHintSet(Kirigami.Action.DisplayHint.IconOnly)) {
-                    kirigamiAction.displayHint |= Kirigami.Action.DisplayHint.HideChildIndicator
-                    return [kirigamiAction]
-                }
-
-                if (kirigamiAction.children) {
-                    return kirigamiAction.children
+                if (action.children) {
+                    return Array.prototype.map.call(action.children, i => i)
                 }
 
                 return []
+            }
+        }
+
+        moreButton: PrivateActionToolButton {
+            flat: root.flat
+
+            action: Kirigami.Action {
+                tooltip: qsTr("More Actions")
+                icon.name: root.overflowIconName
+                displayHint: Kirigami.DisplayHint.IconOnly | Kirigami.DisplayHint.HideChildIndicator
+            }
+
+            menuActions: {
+                if (root.hiddenActions.length == 0) {
+                    return root.actions
+                } else {
+                    result = []
+                    result.concat(Array.prototype.map.call(root.actions, (i) => i))
+                    result.concat(Array.prototype.map.call(hiddenActions, (i) => i))
+                    return result
+                }
+            }
+
+            menuComponent: ActionsMenu {
+                submenuComponent: ActionsMenu {
+                    Binding {
+                        target: parentItem
+                        property: "visible"
+                        value: layout.hiddenActions.includes(parentAction)
+                               && (parentAction.visible === undefined || parentAction.visible)
+                    }
+                }
+
+                itemDelegate: ActionMenuItem {
+                    visible: layout.hiddenActions.includes(action)
+                             && (action.visible === undefined || action.visible)
+                }
+
+                loaderDelegate: Loader {
+                    property var action
+                    height: visible ? implicitHeight : 0
+                    visible: layout.hiddenActions.includes(action)
+                             && (action.visible === undefined || action.visible)
+                }
+
+                separatorDelegate: Controls.MenuSeparator {
+                    property var action
+                    visible: layout.hiddenActions.includes(action)
+                             && (action.visible === undefined || action.visible)
+                }
             }
         }
     }

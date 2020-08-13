@@ -380,6 +380,7 @@ OverlayDrawer {
 
                 T2.StackView {
                     id: stackView
+                    clip: true
                     Layout.fillWidth: true
                     Layout.minimumHeight: currentItem ? currentItem.implicitHeight : 0
                     Layout.maximumHeight: Layout.minimumHeight
@@ -491,7 +492,7 @@ OverlayDrawer {
                                 width: parent.width
                                 GlobalDrawerActionItem {
                                     id: drawerItem
-                                    visible: root.collapsed || !(modelData.hasOwnProperty("expandible") && modelData.expandible)
+                                    visible: root.collapsed || !(modelData.hasOwnProperty("expandible") && modelData.expandible) && (modelData.hasOwnProperty("visible") && modelData.visible)
                                     width: parent.width
                                     onCheckedChanged: {
                                         // move every checked item into view

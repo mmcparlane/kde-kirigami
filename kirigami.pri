@@ -1,5 +1,4 @@
-
-QT          += core qml quick gui svg network quickcontrols2
+QT          += core qml quick gui svg network quickcontrols2 concurrent
 HEADERS     += $$PWD/src/kirigamiplugin.h \
                $$PWD/src/enums.h \
                $$PWD/src/settings.h \
@@ -21,13 +20,16 @@ HEADERS     += $$PWD/src/kirigamiplugin.h \
                $$PWD/src/scenegraph/shadowedtexturematerial.h \
                $$PWD/src/scenegraph/shadowedtexturenode.h \
                $$PWD/src/icon.h \
+               $$PWD/src/imagecolors.h \
                $$PWD/src/delegaterecycler.h \
                $$PWD/src/wheelhandler.h \
                $$PWD/src/shadowedrectangle.h \
                $$PWD/src/shadowedtexture.h \
                $$PWD/src/pagerouter.h \
                $$PWD/src/pagepool.h \
-               $$PWD/src/avatar.h
+               $$PWD/src/avatar.h \
+               $$PWD/src/toolbarlayout.h \
+               $$PWD/src/toolbarlayoutdelegate.h
 SOURCES     += $$PWD/src/kirigamiplugin.cpp \
                $$PWD/src/enums.cpp \
                $$PWD/src/settings.cpp \
@@ -48,20 +50,23 @@ SOURCES     += $$PWD/src/kirigamiplugin.cpp \
                $$PWD/src/scenegraph/shadowedtexturematerial.cpp \
                $$PWD/src/scenegraph/shadowedtexturenode.cpp \
                $$PWD/src/icon.cpp \
+               $$PWD/src/imagecolors.cpp \
                $$PWD/src/delegaterecycler.cpp \
                $$PWD/src/wheelhandler.cpp \
                $$PWD/src/shadowedrectangle.cpp \
                $$PWD/src/shadowedtexture.cpp \
                $$PWD/src/pagerouter.cpp \
                $$PWD/src/pagepool.cpp \
-               $$PWD/src/avatar.cpp
+               $$PWD/src/avatar.cpp \
+               $$PWD/src/toolbarlayout.cpp \
+               $$PWD/src/toolbarlayoutdelegate.cpp
 
 INCLUDEPATH += $$PWD/src $$PWD/src/libkirigami
 DEFINES     += KIRIGAMI_BUILD_TYPE_STATIC
 
 API_VER=1.0
 
-RESOURCES += $$PWD/kirigami.qrc
+RESOURCES += $$PWD/kirigami.qrc $$PWD/src/scenegraph/shaders/shaders.qrc
 
 exists($$_PRO_FILE_PWD_/kirigami-icons.qrc) {
     message("Using icons QRC file shipped by the project")

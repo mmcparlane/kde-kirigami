@@ -13,8 +13,10 @@ import QtQuick.Controls 2.1 as QQC2
 
 /**
  * Page is a container for all the app pages: everything pushed to the
- * ApplicationWindow stackView should be a Page instance (or a subclass,
- * such as ScrollablePage)
+ * ApplicationWindow's pageStack should be a Page.
+ *
+ * For content that should be scrollable, such as ListViews, use ScrollablePage instead.
+ *
  * @see ScrollablePage
  * @inherit QtQuick.Templates.Page
  */
@@ -199,11 +201,17 @@ QQC2.Page {
     /**
      * isCurrentPage: bool
      *
-     * Specifies if it's the currently selected page in the window's pages row.
+     * Specifies if it's the currently selected page in the window's pages row, or if layers
+     * are used whether this is the topmost item on the layers stack. If the page is
+     * not attached to either a column view or a stack view, expect this to be true.
      *
      * @since 2.1
      */
-    readonly property bool isCurrentPage: Kirigami.ColumnView.view ? Kirigami.ColumnView.index == Kirigami.ColumnView.view.currentIndex : true
+    readonly property bool isCurrentPage: Kirigami.ColumnView.view
+            ? (Kirigami.ColumnView.index == Kirigami.ColumnView.view.currentIndex && Kirigami.ColumnView.view.parent.currentItem === Kirigami.ColumnView.view)
+            : (parent && parent instanceof QQC2.StackView
+                ? parent.currentItem === root
+                : true)
 
     /**
      * overlay: Item

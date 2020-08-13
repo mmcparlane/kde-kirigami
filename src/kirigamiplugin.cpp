@@ -23,6 +23,7 @@
 #include "pagerouter.h"
 #include "imagecolors.h"
 #include "avatar.h"
+#include "toolbarlayout.h"
 
 #include <QQmlEngine>
 #include <QQmlContext>
@@ -262,6 +263,12 @@ void KirigamiPlugin::registerTypes(const char *uri)
     qmlRegisterSingletonType<AvatarPrivate>("org.kde.kirigami.private", 2, 13, "AvatarPrivate", [] (QQmlEngine*, QJSEngine*) -> QObject* { return new AvatarPrivate; });
     qmlRegisterType(componentUrl(QStringLiteral("Avatar.qml")), uri, 2, 13, "Avatar");
     qmlRegisterType(componentUrl(QStringLiteral("swipenavigator/SwipeNavigator.qml")), uri, 2, 13, "SwipeNavigator");
+
+    // 2.14
+    qmlRegisterUncreatableType<PreloadRouteGroup>(uri, 2, 14, "PreloadRouteGroup", QStringLiteral("PreloadRouteGroup cannot be created"));
+    qmlRegisterType(componentUrl(QStringLiteral("FlexColumn.qml")), uri, 2, 14, "FlexColumn");
+    qmlRegisterType<ToolBarLayout>(uri, 2, 14, "ToolBarLayout");
+    qmlRegisterSingletonType<DisplayHint>(uri, 2, 14, "DisplayHint", [](QQmlEngine*, QJSEngine*) -> QObject* { return new DisplayHint; });
 
     qmlProtectModule(uri, 2);
 }
