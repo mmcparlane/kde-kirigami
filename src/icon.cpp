@@ -7,6 +7,7 @@
 
 #include "icon.h"
 #include "libkirigami/platformtheme.h"
+#include "scenegraph/managedtexturenode.h"
 
 #include <QSGSimpleTextureNode>
 #include <QQuickWindow>
@@ -22,102 +23,12 @@
 #include <QPainter>
 #include <QScreen>
 
-class ManagedTextureNode : public QSGSimpleTextureNode
-{
-Q_DISABLE_COPY(ManagedTextureNode)
-public:
-    ManagedTextureNode();
 
-    void setTexture(QSharedPointer<QSGTexture> texture);
-
-private:
-    QSharedPointer<QSGTexture> m_texture;
-};
-
-ManagedTextureNode::ManagedTextureNode()
-{}
-
-void ManagedTextureNode::setTexture(QSharedPointer<QSGTexture> texture)
-{
-    m_texture = texture;
-    QSGSimpleTextureNode::setTexture(texture.data());
-}
-
-typedef QHash<qint64, QHash<QWindow*, QWeakPointer<QSGTexture> > > TexturesCache;
-
-struct ImageTexturesCachePrivate
-{
-    TexturesCache cache;
-};
-
-class ImageTexturesCache
-{
-public:
-    ImageTexturesCache();
-    ~ImageTexturesCache();
-
-    /**
-     * @returns the texture for a given @p window and @p image.
-     *
-     * If an @p image id is the same as one already provided before, we won't create
-     * a new texture and return a shared pointer to the existing texture.
-     */
-    QSharedPointer<QSGTexture> loadTexture(QQuickWindow *window, const QImage &image, QQuickWindow::CreateTextureOptions options);
-
-    QSharedPointer<QSGTexture> loadTexture(QQuickWindow *window, const QImage &image);
-
-
-private:
-    QScopedPointer<ImageTexturesCachePrivate> d;
-};
-
-
-ImageTexturesCache::ImageTexturesCache()
-    : d(new ImageTexturesCachePrivate)
-{
-}
-
-ImageTexturesCache::~ImageTexturesCache()
-{
-}
-
-QSharedPointer<QSGTexture> ImageTexturesCache::loadTexture(QQuickWindow *window, const QImage &image, QQuickWindow::CreateTextureOptions options)
-{
-    qint64 id = image.cacheKey();
-    QSharedPointer<QSGTexture> texture = d->cache.value(id).value(window).toStrongRef();
-
-    if (!texture) {
-        auto cleanAndDelete = [this, window, id](QSGTexture* texture) {
-            QHash<QWindow*, QWeakPointer<QSGTexture> >& textures = (d->cache)[id];
-            textures.remove(window);
-            if (textures.isEmpty())
-                d->cache.remove(id);
-            delete texture;
-        };
-        texture = QSharedPointer<QSGTexture>(window->createTextureFromImage(image, options), cleanAndDelete);
-        (d->cache)[id][window] = texture.toWeakRef();
-    }
-
-    //if we have a cache in an atlas but our request cannot use an atlassed texture
-    //create a new texture and use that
-    //don't use removedFromAtlas() as that requires keeping a reference to the non atlased version
-    if (!(options & QQuickWindow::TextureCanUseAtlas) && texture->isAtlasTexture()) {
-        texture = QSharedPointer<QSGTexture>(window->createTextureFromImage(image, options));
-    }
-
-    return texture;
-}
-
-QSharedPointer<QSGTexture> ImageTexturesCache::loadTexture(QQuickWindow *window, const QImage &image)
-{
-    return loadTexture(window, image, {});
-}
 
 Q_GLOBAL_STATIC(ImageTexturesCache, s_iconImageCache)
 
 Icon::Icon(QQuickItem *parent)
     : QQuickItem(parent),
-      m_smooth(false),
       m_changed(false),
       m_active(false),
       m_selected(false),
@@ -127,6 +38,7 @@ Icon::Icon(QQuickItem *parent)
     //FIXME: not necessary anymore
     connect(qApp, &QGuiApplication::paletteChanged, this, &QQuickItem::polish);
     connect(this, &QQuickItem::enabledChanged, this, &QQuickItem::polish);
+    connect(this, &QQuickItem::smoothChanged, this, &QQuickItem::polish);
 }
 
 
@@ -252,21 +164,6 @@ int Icon::implicitHeight() const
     return 32;
 }
 
-void Icon::setSmooth(const bool smooth)
-{
-    if (smooth == m_smooth) {
-        return;
-    }
-    m_smooth = smooth;
-    polish();
-    emit smoothChanged();
-}
-
-bool Icon::smooth() const
-{
-    return m_smooth;
-}
-
 QSGNode* Icon::updatePaintNode(QSGNode* node, QQuickItem::UpdatePaintNodeData* /*data*/)
 {
     if (m_source.isNull() || qFuzzyIsNull(width()) || qFuzzyIsNull(height())) {
@@ -297,7 +194,7 @@ QSGNode* Icon::updatePaintNode(QSGNode* node, QQuickItem::UpdatePaintNodeData* /
         }
         mNode->setRect(nodeRect);
         node = mNode;
-        if (m_smooth) {
+        if (smooth()) {
             mNode->setFiltering(QSGTexture::Linear);
         }
         m_changed = false;
@@ -451,7 +348,7 @@ QImage Icon::findIcon(const QSize &size)
         }
     } else if(iconSource.startsWith(QLatin1String("http://")) || iconSource.startsWith(QLatin1String("https://"))) {
         if(!m_loadedImage.isNull()) {
-            return m_loadedImage.scaled(size, Qt::KeepAspectRatio, m_smooth ? Qt::SmoothTransformation : Qt::FastTransformation );
+            return m_loadedImage.scaled(size, Qt::KeepAspectRatio, smooth() ? Qt::SmoothTransformation : Qt::FastTransformation );
         }
         const auto url = m_source.toUrl();
         QQmlEngine* engine = qmlEngine(this);
@@ -584,5 +481,3 @@ void Icon::setFallback(const QString& fallback)
         Q_EMIT fallbackChanged(fallback);
     }
 }
-
-#include "moc_icon.cpp"

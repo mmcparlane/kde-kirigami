@@ -54,6 +54,7 @@ public:
     Qt::Alignment alignment = Qt::AlignLeft;
     qreal visibleWidth = 0.0;
     Qt::LayoutDirection layoutDirection = Qt::LeftToRight;
+    HeightMode heightMode = ConstrainIfLarger;
 
     bool completed = false;
     bool layoutQueued = false;
@@ -88,7 +89,7 @@ ToolBarLayout::ToolBarLayout(QQuickItem *parent)
     d->removalTimer->setInterval(1000);
     d->removalTimer->setSingleShot(true);
     connect(d->removalTimer, &QTimer::timeout, this, [this]() {
-        for (auto action : d->removedActions) {
+        for (auto action : qAsConst(d->removedActions)) {
             if (!d->actions.contains(action)) {
                 d->delegates.erase(action);
             }
@@ -131,7 +132,7 @@ void ToolBarLayout::removeAction(QObject* action)
 
 void ToolBarLayout::clearActions()
 {
-    for (auto action : d->actions) {
+    for (auto action : qAsConst(d->actions)) {
         auto itr = d->delegates.find(action);
         if (itr != d->delegates.end()) {
             itr->second->hide();
@@ -263,6 +264,21 @@ void ToolBarLayout::setLayoutDirection(Qt::LayoutDirection &newLayoutDirection)
     Q_EMIT layoutDirectionChanged();
 }
 
+ToolBarLayout::HeightMode ToolBarLayout::heightMode() const
+{
+    return d->heightMode;
+}
+
+void ToolBarLayout::setHeightMode(HeightMode newHeightMode)
+{
+    if (newHeightMode == d->heightMode) {
+        return;
+    }
+
+    d->heightMode = newHeightMode;
+    relayout();
+    Q_EMIT heightModeChanged();
+}
 
 void ToolBarLayout::relayout()
 {
@@ -330,7 +346,7 @@ void ToolBarLayout::Private::performLayout()
     // First, calculate the total width and maximum height of all delegates.
     // This will be used to determine which actions to show, which ones to
     // collapse to icon-only etc.
-    for (auto entry : sortedDelegates) {
+    for (auto entry : qAsConst(sortedDelegates)) {
         if (!entry->isActionVisible()) {
             entry->hide();
             continue;
@@ -355,20 +371,23 @@ void ToolBarLayout::Private::performLayout()
     // The last entry also gets spacing but shouldn't, so remove that.
     maxWidth -= spacing;
 
-    maxHeight = std::max(maxHeight, q->height());
-
-    qreal layoutWidth = q->width() - (moreButtonInstance->width() + spacing);
-    if (alignment & Qt::AlignHCenter) {
-        // When centering, we need to reserve space on both sides to make sure
-        // things are properly centered, otherwise we will be to the right of
-        // the center.
-        layoutWidth -= (moreButtonInstance->width() + spacing);
+    if (q->heightValid() && q->height() > 0.0) {
+        maxHeight = q->height();
     }
 
     qreal visibleActionsWidth = 0.0;
 
-    if (maxWidth > q->width()) {
+    if (maxWidth > q->width() - (hiddenActions.isEmpty() ? 0.0 : moreButtonInstance->width() + spacing)) {
         // We have more items than fit into the view, so start hiding some.
+
+        qreal layoutWidth = q->width() - (moreButtonInstance->width() + spacing);
+        if (alignment & Qt::AlignHCenter) {
+            // When centering, we need to reserve space on both sides to make sure
+            // things are properly centered, otherwise we will be to the right of
+            // the center.
+            layoutWidth -= (moreButtonInstance->width() + spacing);
+        }
+
         for (int i = 0; i < sortedDelegates.size(); ++i) {
             auto delegate = sortedDelegates.at(i);
 
@@ -392,6 +411,11 @@ void ToolBarLayout::Private::performLayout()
         } else {
             moreButtonInstance->setX(0.0);
         }
+
+        if (heightMode == AlwaysFill || (heightMode == ConstrainIfLarger && moreButtonInstance->height() > maxHeight)) {
+            moreButtonInstance->setHeight(q->height());
+        }
+
         moreButtonInstance->setY(qRound((maxHeight - moreButtonInstance->height()) / 2.0));
         moreButtonInstance->setVisible(true);
     } else {
@@ -399,9 +423,13 @@ void ToolBarLayout::Private::performLayout()
     }
 
     qreal currentX = layoutStart(visibleActionsWidth);
-    for (auto entry : sortedDelegates) {
+    for (auto entry : qAsConst(sortedDelegates)) {
         if (!entry->isVisible()) {
             continue;
+        }
+
+        if (heightMode == AlwaysFill || (heightMode == ConstrainIfLarger && entry->height() > maxHeight)) {
+            entry->setHeight(q->height());
         }
 
         qreal y = qRound((maxHeight - entry->height()) / 2.0);

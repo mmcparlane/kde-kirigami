@@ -16,9 +16,13 @@ Controls.ToolButton {
 
     Theme.colorSet: Theme.Button
     Theme.inherit: action && action.icon.color.a === 0
-    Theme.backgroundColor: action && action.icon.color.a ? action.icon.color : undefined
+    Theme.backgroundColor: action && action.icon.color.a ? ColorUtils.tintWithAlpha(Theme.backgroundColor, action.icon.color, kirigamiIcon.isMask ? 1 :0.4) : undefined
     Theme.textColor: action && !flat && action.icon.color.a ? Theme.highlightedTextColor : undefined
-
+Icon {
+    id:kirigamiIcon
+    visible: false
+    source: control.icon.name
+}
     hoverEnabled: true
     flat: !control.action || !control.action.icon.color.a
 
@@ -44,8 +48,6 @@ Controls.ToolButton {
     // creation on the main thread.
     onMenuActionsChanged: {
         if (menuComponent && menuActions.length > 0) {
-            updateMenuArrow()
-
             if (!menu) {
                 let incubator = menuComponent.incubateObject(control, {"actions": menuActions})
                 if (incubator.status != Component.Ready) {
@@ -66,7 +68,6 @@ Controls.ToolButton {
         }
     }
 
-    onShowMenuArrowChanged: updateMenuArrow()
 
     checkable: (action && action.checkable) || (menuActions && menuActions.length > 0)
     visible: (action && action.hasOwnProperty("visible")) ? action.visible : true
@@ -91,12 +92,10 @@ Controls.ToolButton {
     // contents of the toolbutton. When using QQC2-desktop-style, the background
     // will be an item that renders the entire control. We can simply set a
     // property on it to get a menu arrow.
-    function updateMenuArrow() {
-        if (background.hasOwnProperty("properties")) {
-            var properties = background.properties
-            properties.menu = showMenuArrow && menuActions.length > 0
-            background.properties = properties
+    // TODO: Support other styles
+    Component.onCompleted: {
+        if (background.hasOwnProperty("showMenuArrow")) {
+            background.showMenuArrow = Qt.binding(() => { return control.showMenuArrow && control.menuActions.length > 0 })
         }
-        // TODO: Support other styles
     }
 }
