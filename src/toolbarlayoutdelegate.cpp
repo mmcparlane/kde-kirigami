@@ -50,7 +50,7 @@ void ToolBarDelegateIncubator::statusChanged(QQmlIncubator::Status status)
     if (status == QQmlIncubator::Error) {
         qWarning() << "Could not create delegate for ToolBarLayout";
         const auto e = errors();
-        for (auto error : e) {
+        for (const auto &error : e) {
             qWarning() << error;
         }
         m_finished = true;
@@ -70,6 +70,14 @@ ToolBarLayoutDelegate::ToolBarLayoutDelegate(ToolBarLayout* parent)
 
 ToolBarLayoutDelegate::~ToolBarLayoutDelegate()
 {
+    if (m_fullIncubator) {
+        m_fullIncubator->clear();
+        delete m_fullIncubator;
+    }
+    if (m_iconIncubator) {
+        m_iconIncubator->clear();
+        delete m_iconIncubator;
+    }
     if (m_full) {
         delete m_full;
     }
@@ -108,15 +116,15 @@ void ToolBarLayoutDelegate::setAction(QObject* action)
     }
 }
 
-void ToolBarLayoutDelegate::createItems(QQmlComponent *fullComponent, QQmlComponent *iconComponent, QQmlContext *context, std::function<void(QQuickItem*)> callback)
+void ToolBarLayoutDelegate::createItems(QQmlComponent *fullComponent, QQmlComponent *iconComponent, std::function<void(QQuickItem*)> callback)
 {
-    m_fullIncubator = new ToolBarDelegateIncubator(fullComponent, context);
+    m_fullIncubator = new ToolBarDelegateIncubator(fullComponent, qmlContext(fullComponent));
     m_fullIncubator->setStateCallback(callback);
     m_fullIncubator->setCompletedCallback([this](ToolBarDelegateIncubator *incubator) {
         if (incubator->isError()) {
             qWarning() << "Could not create delegate for ToolBarLayout";
             const auto errors = incubator->errors();
-            for (auto error : errors) {
+            for (const auto &error : errors) {
                 qWarning() << error;
             }
             return;
@@ -135,13 +143,13 @@ void ToolBarLayoutDelegate::createItems(QQmlComponent *fullComponent, QQmlCompon
 
         QMetaObject::invokeMethod(this, &ToolBarLayoutDelegate::cleanupIncubators, Qt::QueuedConnection);
     });
-    m_iconIncubator = new ToolBarDelegateIncubator(iconComponent, context);
+    m_iconIncubator = new ToolBarDelegateIncubator(iconComponent, qmlContext(iconComponent));
     m_iconIncubator->setStateCallback(callback);
     m_iconIncubator->setCompletedCallback([this](ToolBarDelegateIncubator *incubator) {
         if (incubator->isError()) {
             qWarning() << "Could not create delegate for ToolBarLayout";
             const auto errors = incubator->errors();
-            for (auto error : errors) {
+            for (const auto &error : errors) {
                 qWarning() << error;
             }
             return;
